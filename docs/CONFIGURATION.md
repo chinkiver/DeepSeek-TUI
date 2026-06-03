@@ -29,14 +29,30 @@ Each repo can carry two distinct, complementary files:
       "memory",
       "old handoffs"
     ],
+    "protected_invariants": [
+      "do not break old-session transcript replay"
+    ],
+    "branch_policy": "PRs target the integration branch, not main",
     "verification_policy": {
       "before_claiming_done": ["run focused tests", "read changed files back"]
-    }
+    },
+    "escalate_when": [
+      "a destructive action was not explicitly authorized"
+    ]
   }
   ```
 
-  When present, it is rendered into the system prompt as a higher-authority
-  block and takes precedence over a legacy `WHALE.md`.
+  All fields are optional. When present, the file is rendered into the system
+  prompt as concise prose in a higher-authority block and takes precedence over
+  a legacy `WHALE.md`.
+
+  This is the **local-law** layer in CodeWhale's hierarchy: *base myth & global
+  Constitution* (the model prompt in `prompts/base.md`, including the Brother
+  Whale identity anchor) → *repo constitution* (`.codewhale/constitution.json`,
+  this file) → *task packet* (the current objective) → *runtime policy*
+  (permissions/sandbox/cost limits enforced in code). The repo constitution
+  gives decision rules; it does not replace the global Constitution or the
+  current user request.
 
 > **`WHALE.md` is deprecated.** It overlapped confusingly with `AGENTS.md`.
 > CodeWhale still **reads** an existing `WHALE.md` (below `AGENTS.md`) so old

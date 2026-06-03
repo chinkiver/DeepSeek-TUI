@@ -194,6 +194,15 @@ struct RepoConstitution {
     /// (highest authority first).
     #[serde(default)]
     authority: Option<Vec<String>>,
+    /// Repo invariants the agent must not break.
+    #[serde(default)]
+    protected_invariants: Option<Vec<String>>,
+    /// Branch / release policy in effect (e.g. "PRs target codex/v0.8.53").
+    #[serde(default)]
+    branch_policy: Option<String>,
+    /// Conditions under which the agent should stop and escalate to the user.
+    #[serde(default)]
+    escalate_when: Option<Vec<String>>,
     #[serde(default)]
     verification_policy: Option<VerificationPolicy>,
 }
@@ -209,7 +218,14 @@ impl RepoConstitution {
     /// True when the file carried no usable policy (so we can skip emitting an
     /// empty block).
     fn is_empty(&self) -> bool {
-        self.authority.as_ref().is_none_or(Vec::is_empty)
+        let list_empty = |l: &Option<Vec<String>>| l.as_ref().is_none_or(Vec::is_empty);
+        list_empty(&self.authority)
+            && list_empty(&self.protected_invariants)
+            && list_empty(&self.escalate_when)
+            && self
+                .branch_policy
+                .as_ref()
+                .is_none_or(|s| s.trim().is_empty())
             && self
                 .verification_policy
                 .as_ref()
@@ -217,7 +233,8 @@ impl RepoConstitution {
                 .is_none_or(Vec::is_empty)
     }
 
-    /// Render a model-facing authority block.
+    /// Render a model-facing authority block (concise prose, per the layered
+    /// model: base myth → global constitution → repo constitution = local law).
     fn render_block(&self, source: &Path) -> String {
         let mut body = String::new();
         if let Some(authority) = self.authority.as_ref().filter(|a| !a.is_empty()) {
@@ -227,6 +244,15 @@ impl RepoConstitution {
             for (idx, item) in authority.iter().enumerate() {
                 body.push_str(&format!("{}. {item}\n", idx + 1));
             }
+        }
+        if let Some(invariants) = self.protected_invariants.as_ref().filter(|i| !i.is_empty()) {
+            body.push_str("\nProtected invariants — do not break:\n");
+            for item in invariants {
+                body.push_str(&format!("- {item}\n"));
+            }
+        }
+        if let Some(policy) = self.branch_policy.as_ref().filter(|s| !s.trim().is_empty()) {
+            body.push_str(&format!("\nBranch / release policy: {}\n", policy.trim()));
         }
         if let Some(steps) = self
             .verification_policy
@@ -239,8 +265,14 @@ impl RepoConstitution {
                 body.push_str(&format!("- {step}\n"));
             }
         }
+        if let Some(conditions) = self.escalate_when.as_ref().filter(|c| !c.is_empty()) {
+            body.push_str("\nStop and escalate to the user when:\n");
+            for item in conditions {
+                body.push_str(&format!("- {item}\n"));
+            }
+        }
         format!(
-            "<codewhale_repo_constitution source=\"{}\">\nCodeWhale-specific repo authority policy (takes precedence over a legacy WHALE.md).\n\n{}</codewhale_repo_constitution>",
+            "<codewhale_repo_constitution source=\"{}\">\nCodeWhale-specific repo authority policy (local law: subordinate to the global Constitution and the current user request, but above memory and old handoffs; takes precedence over a legacy WHALE.md).\n\n{}</codewhale_repo_constitution>",
             source.display(),
             body.trim_end()
         )
@@ -1182,7 +1214,10 @@ mod tests {
             r#"{
                 "schema_version": 1,
                 "authority": ["current user request", "live code and tests", "AGENTS.md"],
-                "verification_policy": { "before_claiming_done": ["run focused tests"] }
+                "protected_invariants": ["keep the tool-catalog head byte-stable"],
+                "branch_policy": "PRs target codex/v0.8.53, not main",
+                "verification_policy": { "before_claiming_done": ["run focused tests"] },
+                "escalate_when": ["a destructive action was not authorized"]
             }"#,
         )
         .expect("write constitution");
@@ -1195,6 +1230,9 @@ mod tests {
         assert!(block.contains("<codewhale_repo_constitution"));
         assert!(block.contains("current user request"));
         assert!(block.contains("run focused tests"));
+        assert!(block.contains("keep the tool-catalog head byte-stable"));
+        assert!(block.contains("PRs target codex/v0.8.53"));
+        assert!(block.contains("a destructive action was not authorized"));
         assert!(block.contains("takes precedence over a legacy WHALE.md"));
         // It also surfaces through the system block.
         assert!(
