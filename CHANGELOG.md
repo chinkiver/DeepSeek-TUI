@@ -15,10 +15,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reach beyond that default listing up to a bounded index, and list requests
   above the visible cap fail explicitly instead of silently truncating.
 
+### Changed
+
+- Split `web_run` session/page cache state so cached page reads use shared
+  page handles and do not serialize through the mutation path. The harvest also
+  adds panic-safe state write-back and serializes cache-mutating unit tests so
+  the global web cache remains stable under normal Cargo test parallelism.
+
 ### Community
 
 Thanks to **@cyq1017** for the restore-listing implementation (#2513) and
-**@wywsoor** for the broader macOS/iTerm rollback UX report (#2494).
+**@wywsoor** for the broader macOS/iTerm rollback UX report (#2494), and
+**@HUQIANTAO** for the `web_run` lock-splitting work (#2502).
 
 ## [0.8.53] - 2026-06-03
 

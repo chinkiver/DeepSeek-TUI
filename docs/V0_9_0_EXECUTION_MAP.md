@@ -46,6 +46,7 @@ harvest/stewardship commits:
 | #2530 mention depth-cap hint | Already present in the current v0.9 stack as `a97675824` and `29f57665e`. | `cargo test -p codewhale-tui --locked try_autocomplete_file_mention_no_match` passed. |
 | #2513 restore snapshot listing | Manually harvested as `bb39cf169` with explicit `/restore list 101` cap rejection. | `cargo test -p codewhale-tui --locked restore_`; `cargo fmt --all -- --check`; `cargo clippy -p codewhale-tui --locked -- -D warnings` passed. Keep #2494 open because this is only the restore-listing slice. |
 | #2576 PrefixCacheChange first-freeze event | Already present in the current v0.9 stack through `29acb87a9d`. | `cargo test -p codewhale-tui --locked prefix_cache` passed. Do not close until this integration branch is public or merged. |
+| #2502 web_run RwLock split | Manually harvested with panic-safe state write-back, `Arc<WebPage>` cache reads, and serialized cache tests. | `cargo test -p codewhale-tui --locked web_run`; `cargo clippy -p codewhale-tui --locked -- -D warnings`; `cargo fmt --all -- --check` passed. |
 
 ## PR Harvest Queue
 
@@ -69,7 +70,7 @@ harvest/stewardship commits:
 | #2491 typed ask permissions schema | Conflicting | Prior memory says safe candidate; verify current permissions work first. |
 | #2498 Windows shell process trees | Conflicting | Prior memory says safe candidate; review for #2721 stabilization. |
 | #2501 in-process LLM response cache | Conflicting | Defer; cache key risks noted in prior review. |
-| #2502 web_run RwLock split | Mergeable | Review lock/panic safety before merge. |
+| #2502 web_run RwLock split | Mergeable | Manually harvested with panic-safety and shared cached-page reads; close/comment after branch is public. |
 | #2505 subagent cap accounting | Draft/conflicting | Compare with current subagent cap tests before harvest. |
 | #2506 provider path suffix overrides | Draft/conflicting | Partly superseded by current provider path-suffix support; verify. |
 | #2507 stream chunk timeout config | Draft/conflicting | Defer unless stabilization needs it. |
@@ -124,11 +125,9 @@ Issue count should drop through evidence-backed consolidation, not bulk closing.
 
 ## Immediate Next Actions
 
-1. Review and harvest #2502 after adding panic-safety coverage for the web_run
-   state split.
-2. Review #2517, #2520, and #2522 for prompt/cache implications after #2687
+1. Review #2517, #2520, and #2522 for prompt/cache implications after #2687
    was deferred.
-3. Prepare public comments for #2708, #2513, #2530, #2576, #2581, #2627,
+2. Prepare public comments for #2708, #2502, #2513, #2530, #2576, #2581, #2627,
    #2634, #2636, #2687, and already-harvested performance PRs.
-4. Start file decomposition Phase 1 only after the PR harvest table has no
+3. Start file decomposition Phase 1 only after the PR harvest table has no
    unknown high-priority provider/prompt/cache branches.
