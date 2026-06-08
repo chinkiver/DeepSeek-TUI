@@ -268,6 +268,7 @@ pub enum MessageId {
     CmdExitDescription,
     CmdExportDescription,
     CmdFeedbackDescription,
+    CmdHfDescription,
     CmdHelpDescription,
     CmdHomeDescription,
     CmdHooksDescription,
@@ -314,6 +315,7 @@ pub enum MessageId {
     CmdNewDescription,
     CmdSessionsDescription,
     CmdSettingsDescription,
+    CmdSidebarDescription,
     CmdSkillDescription,
     CmdSkillsDescription,
     CmdSlopDescription,
@@ -594,6 +596,7 @@ pub const ALL_MESSAGE_IDS: &[MessageId] = &[
     MessageId::CmdExitDescription,
     MessageId::CmdExportDescription,
     MessageId::CmdFeedbackDescription,
+    MessageId::CmdHfDescription,
     MessageId::CmdHelpDescription,
     MessageId::CmdHomeDescription,
     MessageId::CmdHooksDescription,
@@ -637,6 +640,7 @@ pub const ALL_MESSAGE_IDS: &[MessageId] = &[
     MessageId::CmdNewDescription,
     MessageId::CmdSessionsDescription,
     MessageId::CmdSettingsDescription,
+    MessageId::CmdSidebarDescription,
     MessageId::CmdSkillDescription,
     MessageId::CmdSkillsDescription,
     MessageId::CmdSlopDescription,
@@ -1121,6 +1125,7 @@ fn english(id: MessageId) -> &'static str {
         MessageId::CmdExitDescription => "Exit the application",
         MessageId::CmdExportDescription => "Export conversation to markdown",
         MessageId::CmdFeedbackDescription => "Generate a GitHub feedback URL",
+        MessageId::CmdHfDescription => "Inspect Hugging Face MCP setup and concepts",
         MessageId::CmdHelpDescription => "Show help information",
         MessageId::CmdHomeDescription => "Show home dashboard with stats and quick actions",
         MessageId::CmdHooksDescription => "List configured lifecycle hooks (read-only)",
@@ -1181,6 +1186,7 @@ fn english(id: MessageId) -> &'static str {
         MessageId::CmdNewDescription => "Start a fresh saved session",
         MessageId::CmdSessionsDescription => "Open session history picker",
         MessageId::CmdSettingsDescription => "Show persistent settings",
+        MessageId::CmdSidebarDescription => "Toggle or focus the right sidebar",
         MessageId::CmdSkillDescription => {
             "Activate a skill, or install/update/uninstall/trust a community skill"
         }
@@ -1587,6 +1593,7 @@ fn vietnamese(id: MessageId) -> Option<&'static str> {
         MessageId::CmdExitDescription => "Thoát ứng dụng",
         MessageId::CmdExportDescription => "Xuất cuộc trò chuyện sang định dạng Markdown",
         MessageId::CmdFeedbackDescription => "Tạo một URL để gửi phản hồi trên GitHub",
+        MessageId::CmdHfDescription => "Kiểm tra thiết lập và khái niệm Hugging Face MCP",
         MessageId::CmdHelpDescription => "Hiển thị thông tin trợ giúp",
         MessageId::CmdHomeDescription => {
             "Hiển thị bảng điều khiển trang chủ với số liệu thống kê và hành động nhanh"
@@ -1661,6 +1668,7 @@ fn vietnamese(id: MessageId) -> Option<&'static str> {
         MessageId::CmdNewDescription => "Bắt đầu một phiên lưu mới",
         MessageId::CmdSessionsDescription => "Mở bảng chọn lịch sử phiên làm việc",
         MessageId::CmdSettingsDescription => "Hiển thị các cài đặt liên tục",
+        MessageId::CmdSidebarDescription => "Toggle or focus the right sidebar",
         MessageId::CmdSkillDescription => {
             "Kích hoạt một kỹ năng, hoặc cài đặt/cập nhật/gỡ bỏ/tin cậy một kỹ năng cộng đồng"
         }
@@ -2138,6 +2146,7 @@ fn japanese(id: MessageId) -> Option<&'static str> {
         MessageId::CmdExitDescription => "アプリを終了",
         MessageId::CmdExportDescription => "会話を Markdown にエクスポート",
         MessageId::CmdFeedbackDescription => "GitHub フィードバック URL を生成",
+        MessageId::CmdHfDescription => "Hugging Face MCP の設定と概念を確認",
         MessageId::CmdHelpDescription => "ヘルプを表示",
         MessageId::CmdHomeDescription => "統計とクイックアクション付きのホームダッシュボードを表示",
         MessageId::CmdHooksDescription => {
@@ -2204,6 +2213,7 @@ fn japanese(id: MessageId) -> Option<&'static str> {
         MessageId::CmdNewDescription => "新しい保存済みセッションを開始",
         MessageId::CmdSessionsDescription => "セッション履歴ピッカーを開く",
         MessageId::CmdSettingsDescription => "永続化された設定を表示",
+        MessageId::CmdSidebarDescription => "Toggle or focus the right sidebar",
         MessageId::CmdSkillDescription => {
             "スキルを有効化、またはコミュニティスキルをインストール／更新／アンインストール／信頼"
         }
@@ -2588,6 +2598,7 @@ fn chinese_simplified(id: MessageId) -> Option<&'static str> {
         MessageId::CmdExitDescription => "退出应用",
         MessageId::CmdExportDescription => "将对话导出为 Markdown",
         MessageId::CmdFeedbackDescription => "生成 GitHub 反馈链接",
+        MessageId::CmdHfDescription => "检查 Hugging Face MCP 设置和概念",
         MessageId::CmdHelpDescription => "显示帮助信息",
         MessageId::CmdHomeDescription => "显示主页面板，含统计与快捷操作",
         MessageId::CmdHooksDescription => "列出已配置的生命周期钩子（只读）",
@@ -2645,6 +2656,7 @@ fn chinese_simplified(id: MessageId) -> Option<&'static str> {
         MessageId::CmdSessionsDescription => "打开会话历史选择器",
         MessageId::CmdSettingsDescription => "显示持久化设置",
         MessageId::CmdSkillDescription => "激活技能，或安装/更新/卸载/信任社区技能",
+        MessageId::CmdSidebarDescription => "Toggle or focus the right sidebar",
         MessageId::CmdSkillsDescription => {
             "列出本地技能（用 `/skills <prefix>` 按名称前缀过滤，--remote 浏览精选注册表）"
         }
@@ -3000,6 +3012,7 @@ fn portuguese_brazil(id: MessageId) -> Option<&'static str> {
         MessageId::CmdExitDescription => "Sair do aplicativo",
         MessageId::CmdExportDescription => "Exportar a conversa para markdown",
         MessageId::CmdFeedbackDescription => "Gerar uma URL de feedback no GitHub",
+        MessageId::CmdHfDescription => "Inspecionar configuracao e conceitos do Hugging Face MCP",
         MessageId::CmdHelpDescription => "Exibir informações de ajuda",
         MessageId::CmdHomeDescription => "Exibir o painel inicial com estatísticas e ações rápidas",
         MessageId::CmdHooksDescription => {
@@ -3072,6 +3085,7 @@ fn portuguese_brazil(id: MessageId) -> Option<&'static str> {
         MessageId::CmdNewDescription => "Iniciar uma nova sessão salva",
         MessageId::CmdSessionsDescription => "Abrir seletor de histórico de sessões",
         MessageId::CmdSettingsDescription => "Exibir as configurações persistidas",
+        MessageId::CmdSidebarDescription => "Toggle or focus the right sidebar",
         MessageId::CmdSkillDescription => {
             "Ativar uma skill, ou instalar/atualizar/desinstalar/confiar em uma skill da comunidade"
         }
@@ -3484,6 +3498,7 @@ fn spanish_latin_america(id: MessageId) -> Option<&'static str> {
         MessageId::CmdExitDescription => "Salir de la aplicación",
         MessageId::CmdExportDescription => "Exportar la conversación a markdown",
         MessageId::CmdFeedbackDescription => "Generar una URL de feedback en GitHub",
+        MessageId::CmdHfDescription => "Inspeccionar configuracion y conceptos de Hugging Face MCP",
         MessageId::CmdHelpDescription => "Mostrar información de ayuda",
         MessageId::CmdHomeDescription => {
             "Mostrar el panel inicial con estadísticas y acciones rápidas"
@@ -3564,6 +3579,7 @@ fn spanish_latin_america(id: MessageId) -> Option<&'static str> {
         MessageId::CmdNewDescription => "Iniciar una nueva sesión guardada",
         MessageId::CmdSessionsDescription => "Abrir el selector de sesiones",
         MessageId::CmdSettingsDescription => "Mostrar las configuraciones persistidas",
+        MessageId::CmdSidebarDescription => "Toggle or focus the right sidebar",
         MessageId::CmdSkillDescription => {
             "Activar una skill, o instalar/actualizar/desinstalar/confiar en una skill de la comunidad"
         }

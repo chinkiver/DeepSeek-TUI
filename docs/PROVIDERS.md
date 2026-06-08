@@ -102,6 +102,12 @@ base_url = "https://gateway.example/v1"
 model = "your-deepseek-compatible-model"
 ```
 
+Private gateways with broken or intercepted certificates should use
+`SSL_CERT_FILE` with a trusted CA bundle. As a last resort,
+`insecure_skip_tls_verify = true` can be set on the active `[providers.*]`
+table; it applies only to the LLM provider client and is shown by
+`codewhale doctor`.
+
 Keep `provider`, `api_key`, and `base_url` in user config or process
 environment. Project-local config overlays intentionally cannot set those keys,
 so a repository cannot silently redirect prompts or credentials to another
@@ -118,7 +124,7 @@ endpoint.
 | `wanjie-ark` | `[providers.wanjie_ark]` | `WANJIE_ARK_API_KEY`, `WANJIE_API_KEY`, `WANJIE_MAAS_API_KEY` | `WANJIE_ARK_BASE_URL`, `WANJIE_BASE_URL`, `WANJIE_MAAS_BASE_URL`; default `https://maas-openapi.wanjiedata.com/api/v1` | `deepseek-reasoner` | OpenAI-compatible hosted route. `WANJIE_ARK_MODEL`, `WANJIE_MODEL`, and `WANJIE_MAAS_MODEL` are accepted. |
 | `volcengine` | `[providers.volcengine]` | `VOLCENGINE_API_KEY`, `VOLCENGINE_ARK_API_KEY`, `ARK_API_KEY` | `VOLCENGINE_BASE_URL`, `VOLCENGINE_ARK_BASE_URL`, `ARK_BASE_URL`; default `https://ark.cn-beijing.volces.com/api/coding/v3` | `DeepSeek-V4-Pro`, `DeepSeek-V4-Flash` | Volcengine/Volcano Engine Ark OpenAI-compatible coding endpoint. `VOLCENGINE_MODEL` and `VOLCENGINE_ARK_MODEL` are accepted. |
 | `openrouter` | `[providers.openrouter]` | `OPENROUTER_API_KEY` | `OPENROUTER_BASE_URL`; default `https://openrouter.ai/api/v1` | `deepseek/deepseek-v4-pro`, `deepseek/deepseek-v4-flash`; recent large IDs include `arcee-ai/trinity-large-thinking`, `minimax/minimax-m3`, `xiaomi/mimo-v2.5-pro`, `qwen/qwen3.6-flash`, `qwen/qwen3.6-35b-a3b`, `qwen/qwen3.6-max-preview`, `qwen/qwen3.6-27b`, `qwen/qwen3.6-plus`, `google/gemma-4-31b-it`, `z-ai/glm-5.1`, `moonshotai/kimi-k2.6` | Additive open-model routing layer. It does not replace DeepSeek; it lets users route supported model IDs through OpenRouter when they choose it. |
-| `xiaomi-mimo` | `[providers.xiaomi_mimo]` | `XIAOMI_MIMO_API_KEY`, `XIAOMI_API_KEY`, `MIMO_API_KEY` | `XIAOMI_MIMO_BASE_URL`, `MIMO_BASE_URL`; default `https://token-plan-sgp.xiaomimimo.com/v1` | Chat: `mimo-v2.5-pro`, `mimo-v2.5`; speech/TTS: `mimo-v2.5-tts`, `mimo-v2.5-tts-voicedesign`, `mimo-v2.5-tts-voiceclone`, `mimo-v2-tts` | Xiaomi MiMo OpenAI-compatible chat completions route. Token Plan keys (`tp-...`) use the token-plan endpoint by default; pay-as-you-go keys can set `base_url = "https://api.xiaomimimo.com/v1"`. It sends `max_completion_tokens` and uses MiMo's `thinking` field for reasoning control. `codewhale speech` / `tts` uses the TTS models. |
+| `xiaomi-mimo` | `[providers.xiaomi_mimo]` | `XIAOMI_MIMO_TOKEN_PLAN_API_KEY`, `MIMO_TOKEN_PLAN_API_KEY`, `XIAOMI_MIMO_API_KEY`, `XIAOMI_API_KEY`, `MIMO_API_KEY` | `XIAOMI_MIMO_BASE_URL`, `MIMO_BASE_URL`, `XIAOMI_MIMO_MODE`, `MIMO_MODE`; default `https://token-plan-sgp.xiaomimimo.com/v1` | Chat: `mimo-v2.5-pro`, `mimo-v2.5`; speech/TTS: `mimo-v2.5-tts`, `mimo-v2.5-tts-voicedesign`, `mimo-v2.5-tts-voiceclone`, `mimo-v2-tts` | Xiaomi MiMo OpenAI-compatible chat completions route. Token Plan keys (`tp-...`) use `api-key` auth and the token-plan endpoint by default; pay-as-you-go mode uses standard API keys (`sk-...`) and `https://api.xiaomimimo.com/v1`. It sends `max_completion_tokens` and uses MiMo's `thinking` field for reasoning control. `codewhale speech` / `tts` uses the TTS models. |
 | `novita` | `[providers.novita]` | `NOVITA_API_KEY` | `NOVITA_BASE_URL`; default `https://api.novita.ai/v1` | `deepseek/deepseek-v4-pro`, `deepseek/deepseek-v4-flash` | OpenAI-compatible hosted route for DeepSeek model IDs. Use config or `CODEWHALE_MODEL` / `DEEPSEEK_MODEL` for model overrides. |
 | `fireworks` | `[providers.fireworks]` | `FIREWORKS_API_KEY` | `FIREWORKS_BASE_URL`; default `https://api.fireworks.ai/inference/v1` | `accounts/fireworks/models/deepseek-v4-pro` | OpenAI-compatible hosted route. Use config or `CODEWHALE_MODEL` / `DEEPSEEK_MODEL` for model overrides. |
 | `siliconflow` | `[providers.siliconflow]` | `SILICONFLOW_API_KEY` | `SILICONFLOW_BASE_URL`; default `https://api.siliconflow.com/v1` | `deepseek-ai/DeepSeek-V4-Pro`, `deepseek-ai/DeepSeek-V4-Flash` | OpenAI-compatible hosted route. Official docs use the `.com` endpoint. `SILICONFLOW_MODEL` is accepted. Reasoning aliases `deepseek-reasoner` and `deepseek-r1` map to Pro; `deepseek-chat` and `deepseek-v3` map to Flash. |
@@ -130,6 +136,24 @@ endpoint.
 | `ollama` | `[providers.ollama]` | Optional `OLLAMA_API_KEY` | `OLLAMA_BASE_URL`; default `http://localhost:11434/v1` | `deepseek-coder:1.3b`; provider-hinted custom tags pass through | Self-hosted Ollama OpenAI-compatible route. Localhost deployments commonly omit auth. `OLLAMA_MODEL` is accepted. |
 | `huggingface` | `[providers.huggingface]` | `HUGGINGFACE_API_KEY`, `HF_TOKEN` | `HUGGINGFACE_BASE_URL`; default `https://router.huggingface.co/v1` | `deepseek-ai/DeepSeek-V4-Pro`, `deepseek-ai/DeepSeek-V4-Flash` | Hugging Face Inference Providers OpenAI-compatible route. Org-prefixed model IDs pass through. |
 
+### Hugging Face Provider vs MCP vs Hub
+
+CodeWhale's `huggingface` provider ID is only the OpenAI-compatible chat
+inference route through Hugging Face Inference Providers. It is selected with
+`/provider huggingface`, `CODEWHALE_PROVIDER=huggingface`, or
+`provider = "huggingface"`.
+
+Hugging Face MCP is a separate external-tool route. Configure it through the
+MCP config described in `docs/MCP.md`, preferably using the settings-generated
+snippet from <https://huggingface.co/settings/mcp>. In the TUI, `/hf mcp status`
+checks whether the Hugging Face MCP server appears in the resolved MCP config,
+`/hf mcp setup` prints the settings workflow and a placeholder-only shape, and
+`/hf concepts` explains the provider/MCP/Hub distinction.
+
+Hub publishing or repository management remains explicit user action through
+Hub-native tooling such as `huggingface_hub` or git. The `/hf` helper does not
+upload to Hugging Face and does not perform direct Hugging Face Hub HTTP search.
+
 ### Xiaomi MiMo Notes
 
 `xiaomi-mimo` defaults to `mimo-v2.5-pro` for long-context reasoning and coding
@@ -137,6 +161,14 @@ work. The chat picker also exposes the latest Omni model `mimo-v2.5`. Xiaomi MiM
 TTS is available through `codewhale --provider xiaomi-mimo speech "text"
 --model tts` (or the `tts` alias) plus model-visible `speech` / `tts` tools in
 Agent/YOLO mode.
+
+Token Plan keys default to the Singapore endpoint
+`https://token-plan-sgp.xiaomimimo.com/v1`. If your MiMo account is provisioned
+for the China region, set `base_url = "https://token-plan-cn.xiaomimimo.com/v1"`
+explicitly in `[providers.xiaomi_mimo]` or set `mode = "token-plan-cn"`. Europe
+Token Plan accounts can use `mode = "token-plan-ams"`; `mode = "pay-as-you-go"`
+selects the standard API endpoint and standard MiMo key family.
+
 Voice-design and voice-clone shorthands map to `mimo-v2.5-tts-voicedesign` and
 `mimo-v2.5-tts-voiceclone`. Xiaomi's current
 [image-understanding guide](https://platform.xiaomimimo.com/docs/en-US/usage-guide/multimodal-understanding/image-understanding)

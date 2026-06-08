@@ -471,7 +471,13 @@ struct AppServerArgs {
 
 const MCP_SERVER_DEFINITIONS_KEY: &str = "mcp.server_definitions";
 
+fn install_rustls_crypto_provider() {
+    let _ = rustls::crypto::ring::default_provider().install_default();
+}
+
 pub fn run_cli() -> std::process::ExitCode {
+    install_rustls_crypto_provider();
+
     match run() {
         Ok(()) => std::process::ExitCode::SUCCESS,
         Err(err) => {
@@ -2965,6 +2971,7 @@ mod tests {
             api_key_source: Some(RuntimeApiKeySource::Keyring),
             base_url: "https://openai-compatible.example/v4".to_string(),
             auth_mode: Some("api_key".to_string()),
+            insecure_skip_tls_verify: false,
             output_mode: None,
             log_level: None,
             telemetry: false,
@@ -3024,6 +3031,7 @@ mod tests {
             api_key_source: Some(RuntimeApiKeySource::ConfigFile),
             base_url: "https://api.deepseek.com/beta".to_string(),
             auth_mode: Some("api_key".to_string()),
+            insecure_skip_tls_verify: false,
             output_mode: None,
             log_level: None,
             telemetry: false,
@@ -3079,6 +3087,7 @@ mod tests {
             api_key_source: Some(RuntimeApiKeySource::Keyring),
             base_url: "https://api.moonshot.ai/v1".to_string(),
             auth_mode: Some("api_key".to_string()),
+            insecure_skip_tls_verify: false,
             output_mode: None,
             log_level: None,
             telemetry: false,
@@ -3145,6 +3154,7 @@ mod tests {
             api_key_source: None,
             base_url: "https://openai-compatible.example/v4".to_string(),
             auth_mode: None,
+            insecure_skip_tls_verify: false,
             output_mode: None,
             log_level: None,
             telemetry: false,
@@ -3240,6 +3250,7 @@ mod tests {
                 api_key_source: Some(RuntimeApiKeySource::Keyring),
                 base_url: "http://localhost:8000/v1".to_string(),
                 auth_mode: Some("api_key".to_string()),
+                insecure_skip_tls_verify: false,
                 output_mode: None,
                 log_level: None,
                 telemetry: false,
