@@ -1797,6 +1797,7 @@ async fn run_event_loop(
                         }
                         app.runtime_turn_id = Some(turn_id);
                         app.runtime_turn_status = Some("in_progress".to_string());
+                        app.turn_counter = app.turn_counter.saturating_add(1);
                         app.reasoning_buffer.clear();
                         app.reasoning_header = None;
                         app.last_reasoning = None;
@@ -2307,8 +2308,10 @@ async fn run_event_loop(
                         if app.agent_activity_started_at.is_none() {
                             app.agent_activity_started_at = Some(Instant::now());
                         }
-                        app.status_message =
-                            Some(format!("Sub-agent {id} starting: {prompt_summary}"));
+                        // #3030: Assign a stable user-facing label for this
+                        // agent and keep the raw id out of the status bar.
+                        let label = app.ensure_agent_label(&id);
+                        app.status_message = Some(format!("{label} starting: {prompt_summary}"));
                         let _ = engine_handle.send(Op::ListSubAgents).await;
                     }
                     EngineEvent::AgentProgress { id, status } => {
@@ -2323,7 +2326,10 @@ async fn run_event_loop(
                         if app.agent_activity_started_at.is_none() {
                             app.agent_activity_started_at = Some(Instant::now());
                         }
-                        app.status_message = Some(format!("Sub-agent {id}: {display}"));
+                        // #3030: progress can arrive before AgentSpawned is
+                        // observed — assign the stable label on first sight.
+                        let label = app.ensure_agent_label(&id);
+                        app.status_message = Some(format!("{label}: {display}"));
                         // #3033: Throttle redraws from rapid AgentProgress events.
                         // When 4+ sub-agents are running concurrently, each firing
                         // progress events, the per-event `needs_redraw = true` saturates
@@ -2362,8 +2368,10 @@ async fn run_event_loop(
                                         && matches!(agent.status, SubAgentStatus::Running)
                                 });
                         app.agent_progress.remove(&id);
+                        // #3030: stable label with raw-id fallback.
+                        let label = app.agent_display_label(&id);
                         app.status_message = Some(format!(
-                            "Sub-agent {id} completed: {}",
+                            "{label} completed: {}",
                             summarize_tool_output(&result)
                         ));
                         let should_recapture_terminal =
