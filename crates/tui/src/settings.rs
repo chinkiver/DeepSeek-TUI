@@ -1116,10 +1116,10 @@ fn normalize_reasoning_effort_setting(value: &str) -> Result<Option<String>> {
         "medium" | "mid" => "medium",
         "high" => "high",
         "auto" | "automatic" => "auto",
-        "max" | "maximum" | "xhigh" => "max",
+        "max" | "maximum" | "xhigh" | "ultracode" => "max",
         _ => {
             anyhow::bail!(
-                "Failed to update setting: invalid reasoning_effort '{value}'. Expected: auto, off, low, medium, high, max, xhigh, or default."
+                "Failed to update setting: invalid reasoning_effort '{value}'. Expected: auto, off, low, medium, high, max, xhigh, ultracode, or default."
             );
         }
     };
@@ -1387,6 +1387,10 @@ mod tests {
         settings
             .set("reasoning_effort", "xhigh")
             .expect("normalize xhigh");
+        assert_eq!(settings.reasoning_effort.as_deref(), Some("max"));
+        settings
+            .set("reasoning_effort", "ultracode")
+            .expect("normalize ultracode");
         assert_eq!(settings.reasoning_effort.as_deref(), Some("max"));
         settings
             .set("reasoning_effort", "default")

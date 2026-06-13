@@ -207,7 +207,7 @@ impl ReasoningEffort {
             "medium" | "mid" => Self::Medium,
             "high" => Self::High,
             "auto" | "automatic" => Self::Auto,
-            "max" | "maximum" | "xhigh" => Self::Max,
+            "max" | "maximum" | "xhigh" | "ultracode" => Self::Max,
             _ => Self::default(),
         }
     }
@@ -5663,6 +5663,10 @@ mod tests {
         assert_eq!(
             ReasoningEffort::Max.api_value_for_provider(ApiProvider::Deepseek),
             Some("max")
+        );
+        assert_eq!(
+            ReasoningEffort::from_setting("ultracode"),
+            ReasoningEffort::Max
         );
     }
 

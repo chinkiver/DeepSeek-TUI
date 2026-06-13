@@ -2056,6 +2056,7 @@ fn provider_accepts_reasoning_content(provider: ApiProvider) -> bool {
             | ApiProvider::Arcee
             | ApiProvider::Minimax
             | ApiProvider::Sglang
+            | ApiProvider::Zai
             | ApiProvider::Moonshot // #3016: Kimi thinking traces use reasoning_content
     )
 }
@@ -3952,6 +3953,7 @@ mod alias_thinking_detection_tests {
         assert!(provider_accepts_reasoning_content(ApiProvider::XiaomiMimo));
         assert!(provider_accepts_reasoning_content(ApiProvider::Arcee));
         assert!(provider_accepts_reasoning_content(ApiProvider::Minimax));
+        assert!(provider_accepts_reasoning_content(ApiProvider::Zai));
         // #3016: Moonshot's native endpoint streams Kimi thinking as
         // reasoning_content.
         assert!(provider_accepts_reasoning_content(ApiProvider::Moonshot));
@@ -3985,6 +3987,11 @@ mod alias_thinking_detection_tests {
         assert!(should_replay_reasoning_content_for_provider(
             ApiProvider::Minimax,
             "MiniMax-M3",
+            None,
+        ));
+        assert!(should_replay_reasoning_content_for_provider(
+            ApiProvider::Zai,
+            "GLM-5.2",
             None,
         ));
         assert!(!should_replay_reasoning_content_for_provider(
@@ -4095,6 +4102,10 @@ mod alias_thinking_detection_tests {
         assert!(
             is_reasoning_model_for_stream(ApiProvider::Arcee, "trinity-large-thinking"),
             "trinity-large-thinking should stream reasoning as thinking on direct Arcee"
+        );
+        assert!(
+            is_reasoning_model_for_stream(ApiProvider::Zai, "GLM-5.2"),
+            "GLM-5.2 should stream reasoning_content as thinking on direct Z.ai"
         );
         for model in [
             "arcee-ai/trinity-large-thinking",

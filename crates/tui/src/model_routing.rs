@@ -315,7 +315,7 @@ fn parse_auto_route_reasoning_effort(effort: &str) -> Option<ReasoningEffort> {
         "off" | "disabled" | "none" | "false" => Some(ReasoningEffort::Off),
         "low" | "minimal" | "medium" | "mid" => Some(ReasoningEffort::High),
         "high" => Some(ReasoningEffort::High),
-        "max" | "maximum" | "xhigh" => Some(ReasoningEffort::Max),
+        "max" | "maximum" | "xhigh" | "ultracode" => Some(ReasoningEffort::Max),
         _ => None,
     }
 }
@@ -621,6 +621,12 @@ mod tests {
                 .expect("valid router response should parse");
 
         assert_eq!(rec.model, "deepseek-v4-pro");
+        assert_eq!(rec.reasoning_effort, Some(ReasoningEffort::Max));
+
+        let rec = parse_auto_route_recommendation(
+            r#"{"model":"deepseek-v4-pro","reasoning_effort":"ultracode"}"#,
+        )
+        .expect("ultracode should parse as max");
         assert_eq!(rec.reasoning_effort, Some(ReasoningEffort::Max));
     }
 

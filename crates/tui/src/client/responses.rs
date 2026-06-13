@@ -609,7 +609,7 @@ fn codex_responses_reasoning_effort(raw: &str) -> Option<&'static str> {
         "minimal" => Some("low"),
         "low" => Some("low"),
         "high" => Some("high"),
-        "xhigh" | "max" | "maximum" => Some("xhigh"),
+        "xhigh" | "max" | "maximum" | "ultracode" => Some("xhigh"),
         _ => Some("medium"),
     }
 }
@@ -707,6 +707,7 @@ mod tests {
         assert_eq!(codex_responses_reasoning_effort("max"), Some("xhigh"));
         assert_eq!(codex_responses_reasoning_effort("maximum"), Some("xhigh"));
         assert_eq!(codex_responses_reasoning_effort("xhigh"), Some("xhigh"));
+        assert_eq!(codex_responses_reasoning_effort("ultracode"), Some("xhigh"));
         assert_eq!(codex_responses_reasoning_effort("high"), Some("high"));
         assert_eq!(codex_responses_reasoning_effort("medium"), Some("medium"));
         assert_eq!(codex_responses_reasoning_effort("minimal"), Some("low"));

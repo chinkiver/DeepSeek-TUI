@@ -1258,7 +1258,8 @@ pub(super) fn apply_reasoning_effort(
             | ApiProvider::Sglang
             | ApiProvider::Volcengine
             | ApiProvider::Together
-            | ApiProvider::Atlascloud => {
+            | ApiProvider::Atlascloud
+            | ApiProvider::Zai => {
                 body["thinking"] = json!({ "type": "disabled" });
             }
             ApiProvider::OpenaiCodex => {
@@ -1304,7 +1305,7 @@ pub(super) fn apply_reasoning_effort(
             ApiProvider::Minimax => {
                 body["thinking"] = json!({ "type": "disabled" });
             }
-            ApiProvider::Zai | ApiProvider::Stepfun => {}
+            ApiProvider::Stepfun => {}
         },
         "low" | "minimal" | "medium" | "mid" | "high" | "" => match provider {
             // DeepSeek compatibility: low/medium both map to high
@@ -1381,9 +1382,15 @@ pub(super) fn apply_reasoning_effort(
             ApiProvider::Minimax => {
                 body["thinking"] = json!({ "type": "adaptive" });
             }
-            ApiProvider::Zai | ApiProvider::Stepfun => {}
+            ApiProvider::Zai => {
+                body["thinking"] = json!({
+                    "type": "enabled",
+                    "clear_thinking": false,
+                });
+            }
+            ApiProvider::Stepfun => {}
         },
-        "xhigh" | "max" | "highest" => match provider {
+        "xhigh" | "max" | "highest" | "ultracode" => match provider {
             ApiProvider::Deepseek
             | ApiProvider::DeepseekCN
             | ApiProvider::Siliconflow
@@ -1438,7 +1445,13 @@ pub(super) fn apply_reasoning_effort(
             ApiProvider::Minimax => {
                 body["thinking"] = json!({ "type": "adaptive" });
             }
-            ApiProvider::Zai | ApiProvider::Stepfun => {}
+            ApiProvider::Zai => {
+                body["thinking"] = json!({
+                    "type": "enabled",
+                    "clear_thinking": false,
+                });
+            }
+            ApiProvider::Stepfun => {}
         },
         _ => {}
     }
@@ -2880,6 +2893,34 @@ mod tests {
         let mut body = json!({});
         apply_reasoning_effort(&mut body, None, ApiProvider::Minimax);
         assert_eq!(body, json!({ "reasoning_split": true }));
+    }
+
+    #[test]
+    fn reasoning_effort_zai_uses_documented_thinking_shape() {
+        let mut body = json!({});
+        apply_reasoning_effort(&mut body, Some("high"), ApiProvider::Zai);
+        assert_eq!(
+            body,
+            json!({ "thinking": { "type": "enabled", "clear_thinking": false } })
+        );
+
+        let mut body = json!({});
+        apply_reasoning_effort(&mut body, Some("max"), ApiProvider::Zai);
+        assert_eq!(
+            body,
+            json!({ "thinking": { "type": "enabled", "clear_thinking": false } })
+        );
+
+        let mut body = json!({});
+        apply_reasoning_effort(&mut body, Some("ultracode"), ApiProvider::Zai);
+        assert_eq!(
+            body,
+            json!({ "thinking": { "type": "enabled", "clear_thinking": false } })
+        );
+
+        let mut body = json!({});
+        apply_reasoning_effort(&mut body, Some("off"), ApiProvider::Zai);
+        assert_eq!(body, json!({ "thinking": { "type": "disabled" } }));
     }
 
     #[test]
