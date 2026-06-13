@@ -421,4 +421,66 @@ mod tests {
         );
         assert!(exec.all_terminal());
     }
+
+    /// Dogfood smoke (#3166): several concurrent exec-style workers with one
+    /// injected failure. Proves the executor drives a small fleet to terminal
+    /// outcomes and that a failing worker is classified distinctly from the
+    /// passing ones — all without the codewhale binary.
+    #[cfg(unix)]
+    #[test]
+    fn executor_drives_concurrent_workers_with_injected_failure() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let mut exec = FleetExecutor::new(tmp.path());
+
+        // Three healthy workers emit a tool_use + done; one injected-failure
+        // worker emits an error event and exits non-zero.
+        let ok = r#"printf '{"type":"tool_use","name":"grep_files","id":"c","input":{}}\n{"type":"done"}\n'"#;
+        let bad = r#"printf '{"type":"error","error":"injected failure"}\n'; exit 7"#;
+        for id in ["w1", "w2", "w3"] {
+            exec.start_worker(
+                id,
+                FleetWorkerCommand::new("sh", vec!["-c".to_string(), ok.to_string()]),
+                None,
+            )
+            .unwrap();
+        }
+        exec.start_worker(
+            "w-fail",
+            FleetWorkerCommand::new("sh", vec!["-c".to_string(), bad.to_string()]),
+            None,
+        )
+        .unwrap();
+
+        let ids = ["w1", "w2", "w3", "w-fail"];
+        let mut terminals: std::collections::BTreeMap<&str, FleetWorkerEventPayload> =
+            std::collections::BTreeMap::new();
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(8);
+        while terminals.len() < ids.len() {
+            for id in ids {
+                let _ = exec.drain_events(id);
+                if let Some(term) = exec.poll_terminal(id) {
+                    terminals.insert(id, term);
+                }
+            }
+            assert!(
+                std::time::Instant::now() < deadline,
+                "not all workers terminated: {terminals:?}"
+            );
+            std::thread::sleep(std::time::Duration::from_millis(20));
+        }
+
+        assert!(exec.all_terminal());
+        for id in ["w1", "w2", "w3"] {
+            assert!(
+                matches!(terminals[id], FleetWorkerEventPayload::Completed { .. }),
+                "{id} should pass, got {:?}",
+                terminals[id]
+            );
+        }
+        assert!(
+            matches!(terminals["w-fail"], FleetWorkerEventPayload::Failed { .. }),
+            "injected-failure worker should fail, got {:?}",
+            terminals["w-fail"]
+        );
+    }
 }

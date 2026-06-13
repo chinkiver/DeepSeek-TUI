@@ -1,16 +1,27 @@
 # Agent Fleet dogfood smoke spec (#3166)
 #
 # This spec exercises the fleet end-to-end: create a run with two local
-# workers, run a lint task and a review task, verify the ledger records
-# receipts, and confirm the status surfaces work.
+# workers, run a workspace-check task and a protocol-review task, verify the
+# ledger records receipts, and confirm the status surfaces work. Each worker is
+# a headless `codewhale exec` run (see docs/AGENT_RUNTIME.md).
 #
-# Run:
+# Automated CI-safe smoke (no external services, no model calls):
+#   cargo test -p codewhale-tui --bins fleet::executor
+# It drives several concurrent exec-style workers (with one injected failure)
+# through the real host adapter and asserts terminal pass/fail outcomes.
+#
+# Manual run (drives real `codewhale exec` workers; needs provider creds):
 #   codewhale fleet run docs/examples/fleet-dogfood.toml --max-workers 2 --once
 #
 # Then check:
 #   codewhale fleet status
 #   codewhale fleet inspect <worker-id-from-status>
 #   codewhale fleet logs <worker-id-from-status>
+#
+# NOTE: wiring the manager run loop to drive FleetExecutor for real workers is
+# the in-progress cutover; until then the manual run path uses the local
+# simulation harness. The automated smoke above already proves the real
+# exec-subprocess -> ledger-event path.
 
 name = "dogfood smoke"
 labels = { milestone = "v0.8.60", class = "smoke" }
