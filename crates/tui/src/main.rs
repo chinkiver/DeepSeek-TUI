@@ -6436,6 +6436,7 @@ async fn run_exec_agent(
     let route = resolve_cli_auto_route(config, model, prompt).await?;
     let execution_config = config_for_cli_route(config, &route);
     let auto_model = route.auto_model;
+    let effective_provider = route.provider;
     let effective_model = route.model;
     let effective_reasoning_effort = route
         .reasoning_effort
@@ -6593,6 +6594,7 @@ async fn run_exec_agent(
         .send(Op::SendMessage {
             content: prompt.to_string(),
             mode,
+            provider: Some(effective_provider),
             model: effective_model.clone(),
             goal_objective: None,
             goal_token_budget: None,

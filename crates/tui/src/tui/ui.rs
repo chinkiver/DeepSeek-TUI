@@ -5643,6 +5643,24 @@ async fn dispatch_user_message(
     if let Some(note) = paused_note.as_deref() {
         content.push_str(note);
     }
+    let auto_selection = if auto_router::should_resolve_auto_model_selection(app) {
+        match auto_router::resolve_auto_model_selection(app, config, &message, &content).await {
+            Ok(selection) => Some(selection),
+            Err(err) => {
+                app.is_loading = false;
+                app.dispatch_started_at = None;
+                app.last_send_at = None;
+                app.status_message = Some(format!("Auto model route unavailable: {err}"));
+                return Err(err);
+            }
+        }
+    } else {
+        None
+    };
+    let effective_provider = auto_selection
+        .as_ref()
+        .map(|selection| selection.provider)
+        .unwrap_or(app.api_provider);
     let message_index = app.api_messages.len();
     app.system_prompt = Some(
         prompts::system_prompt_for_mode_with_context_skills_and_session(
@@ -5696,12 +5714,6 @@ async fn dispatch_user_message(
         persistence_actor::persist(PersistRequest::Checkpoint(session));
     }
 
-    let auto_selection = if auto_router::should_resolve_auto_model_selection(app) {
-        Some(auto_router::resolve_auto_model_selection(app, config, &message, &content).await)
-    } else {
-        None
-    };
-
     let effective_model = if app.auto_model {
         auto_selection
             .as_ref()
@@ -5726,12 +5738,12 @@ async fn dispatch_user_message(
             });
         app.last_effective_reasoning_effort = Some(effort);
         effort
-            .api_value_for_provider(app.api_provider)
+            .api_value_for_provider(effective_provider)
             .map(str::to_string)
     } else {
         app.last_effective_reasoning_effort = None;
         app.reasoning_effort
-            .api_value_for_provider(app.api_provider)
+            .api_value_for_provider(effective_provider)
             .map(str::to_string)
     };
 
@@ -5739,13 +5751,14 @@ async fn dispatch_user_message(
         if app.auto_model {
             app.last_effective_model = Some(effective_model.clone());
             let mut status = format!(
-                "Auto model selected: {effective_model} via {}",
+                "Auto model selected: {} / {effective_model} via {}",
+                selection.provider.display_name(),
                 selection.source.label()
             );
             if let Some(effort) = app.last_effective_reasoning_effort {
                 status.push_str(&format!(
                     "; thinking auto: {}",
-                    effort.display_label_for_provider(app.api_provider)
+                    effort.display_label_for_provider(effective_provider)
                 ));
             }
             app.status_message = Some(status);
@@ -5758,6 +5771,7 @@ async fn dispatch_user_message(
         .send(Op::SendMessage {
             content,
             mode: app.mode,
+            provider: Some(effective_provider),
             model: effective_model,
             goal_objective: app.hunt.quarry.clone(),
             goal_token_budget: app.hunt.token_budget,
