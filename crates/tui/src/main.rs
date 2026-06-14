@@ -63,6 +63,7 @@ mod project_context_cache;
 mod project_doc;
 mod prompt_zones;
 mod prompts;
+mod provider_readiness;
 mod purge;
 pub mod repl;
 mod retry_status;
