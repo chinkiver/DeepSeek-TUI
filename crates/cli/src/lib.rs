@@ -869,11 +869,12 @@ fn provider_slot(provider: ProviderKind) -> &'static str {
         ProviderKind::Zai => "zai",
         ProviderKind::Stepfun => "stepfun",
         ProviderKind::Minimax => "minimax",
+        ProviderKind::Deepinfra => "deepinfra",
     }
 }
 
 /// Provider order used by the `auth list` and `auth status` outputs.
-const PROVIDER_LIST: [ProviderKind; 24] = [
+const PROVIDER_LIST: [ProviderKind; 25] = [
     ProviderKind::Deepseek,
     ProviderKind::NvidiaNim,
     ProviderKind::Openai,
@@ -898,6 +899,7 @@ const PROVIDER_LIST: [ProviderKind; 24] = [
     ProviderKind::Zai,
     ProviderKind::Stepfun,
     ProviderKind::Minimax,
+    ProviderKind::Deepinfra,
 ];
 
 fn provider_is_supported_by_tui(provider: ProviderKind) -> bool {
@@ -1020,6 +1022,7 @@ fn provider_env_vars(provider: ProviderKind) -> &'static [&'static str] {
         ProviderKind::Zai => &["ZAI_API_KEY", "Z_AI_API_KEY"],
         ProviderKind::Stepfun => &["STEPFUN_API_KEY", "STEP_API_KEY"],
         ProviderKind::Minimax => &["MINIMAX_API_KEY"],
+        ProviderKind::Deepinfra => &["DEEPINFRA_API_KEY", "DEEPINFRA_TOKEN"],
     }
 }
 

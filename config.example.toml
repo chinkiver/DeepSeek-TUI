@@ -20,7 +20,7 @@
 # `api_key` / `base_url` are
 # still read as DeepSeek defaults when `[providers.deepseek]` is absent
 # (backward compatibility).
-provider = "deepseek" # deepseek | deepseek-cn | nvidia-nim | openai | atlascloud | wanjie-ark | volcengine | openrouter | xiaomi-mimo | novita | fireworks | siliconflow | siliconflow-CN | arcee | moonshot | sglang | vllm | ollama | huggingface | together | openai-codex | anthropic
+provider = "deepseek" # deepseek | deepseek-cn | nvidia-nim | openai | atlascloud | wanjie-ark | volcengine | openrouter | xiaomi-mimo | novita | fireworks | siliconflow | siliconflow-CN | arcee | moonshot | sglang | vllm | ollama | huggingface | together | openai-codex | anthropic | deepinfra
 api_key = "YOUR_DEEPSEEK_API_KEY" # must be non-empty
 base_url = "https://api.deepseek.com/beta"
 # provider = "deepseek-cn"                       # legacy alias (official host is still https://api.deepseek.com)
@@ -448,6 +448,12 @@ max_subagents = 10 # optional (1-20)
 [providers.huggingface]
 # api_key = "YOUR_HF_TOKEN"
 # base_url = "https://router.huggingface.co/v1"
+# model = "deepseek-ai/DeepSeek-V4-Pro"     # or deepseek-ai/DeepSeek-V4-Flash
+
+# DeepInfra — AI inference cloud (https://deepinfra.com)
+[providers.deepinfra]
+# api_key = "YOUR_DEEPINFRA_TOKEN"
+# base_url = "https://api.deepinfra.com/v1/openai"
 # model = "deepseek-ai/DeepSeek-V4-Pro"     # or deepseek-ai/DeepSeek-V4-Flash
 
 # ─────────────────────────────────────────────────────────────────────────────────
