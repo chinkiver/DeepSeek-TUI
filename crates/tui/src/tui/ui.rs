@@ -3937,6 +3937,9 @@ async fn run_event_loop(
                                 engine_handle.cancel();
                                 mark_active_turn_cancelled_locally(app);
                                 current_streaming_text.clear();
+                                // #2739: persist the cancelled turn's partial
+                                // messages so --continue can resume from here.
+                                persist_recovery_snapshot(app);
                                 app.status_message = Some("Request cancelled".to_string());
                             }
                         }
@@ -4951,6 +4954,21 @@ fn reconcile_turn_liveness(app: &mut App, now: Instant, has_running_agents: bool
     false
 }
 
+/// #2739: persist the current in-memory session state before a recovery or
+/// cancellation path clears turn bookkeeping. Without this snapshot, the
+/// just-finalised partial turn lives only in `app.api_messages` and is never
+/// written to disk, so `--continue` loads the *previous* save — effectively
+/// losing the entire in-progress turn.
+fn persist_recovery_snapshot(app: &mut App) {
+    if let Ok(manager) = SessionManager::default_location() {
+        let session = build_session_snapshot(app, &manager);
+        if app.current_session_id.is_none() {
+            app.current_session_id = Some(session.metadata.id.clone());
+        }
+        persistence_actor::persist(PersistRequest::SessionSnapshot(session));
+    }
+}
+
 fn recover_stalled_runtime_turn(app: &mut App, message: &str, level: StatusToastLevel) {
     // Finalize in-flight thinking / assistant / tool cells so the
     // transcript doesn't show permanent spinners after recovery.
@@ -4960,6 +4978,12 @@ fn recover_stalled_runtime_turn(app: &mut App, message: &str, level: StatusToast
     app.streaming_state.reset();
     app.streaming_message_index = None;
     app.streaming_thinking_active_entry = None;
+
+    // #2739: persist the partial turn's api_messages before clearing
+    // turn state. Without this snapshot the stalled/cancelled turn's
+    // messages are held only in memory and --continue sees the
+    // *previous* save, losing the entire in-progress turn.
+    persist_recovery_snapshot(app);
 
     app.is_loading = false;
     app.turn_started_at = None;
@@ -5021,6 +5045,10 @@ fn recover_engine_event_disconnect(app: &mut App) -> bool {
     app.streaming_state.reset();
     app.streaming_message_index = None;
     app.streaming_thinking_active_entry = None;
+
+    // #2739: persist partial turn before clearing state.
+    persist_recovery_snapshot(app);
+
     app.is_loading = false;
     app.is_compacting = false;
     app.is_purging = false;
