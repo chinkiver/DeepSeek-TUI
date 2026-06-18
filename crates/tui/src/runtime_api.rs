@@ -2933,14 +2933,11 @@ fn current_git_head(workspace: &std::path::Path) -> Option<String> {
 
 fn resolve_skills_dir(config: &Config, workspace: &std::path::Path) -> PathBuf {
     if config.skills_config().scan_codewhale_only() {
-        let canonical_workspace = match fs::canonicalize(workspace) {
-            Ok(path) => path,
-            Err(_) => return config.skills_dir(),
-        };
-        let codewhale_skills_dir = workspace.join(".codewhale").join("skills");
-        if let Ok(canonical_skills) = fs::canonicalize(&codewhale_skills_dir)
-            && canonical_skills.starts_with(&canonical_workspace)
-            && canonical_skills.is_dir()
+        if config.skills_dir.is_some() {
+            return config.skills_dir();
+        }
+        if let Some(codewhale_skills_dir) = crate::skills::codewhale_workspace_skills_dir(workspace)
+            && let Ok(canonical_skills) = fs::canonicalize(&codewhale_skills_dir)
         {
             return canonical_skills;
         }
@@ -6454,6 +6451,28 @@ mod tests {
 
         let expected = fs::canonicalize(&codewhale_skills).expect("canonical codewhale skills");
         assert_eq!(resolved, expected);
+    }
+
+    #[test]
+    fn resolve_skills_dir_preserves_explicit_dir_in_codewhale_only_scan() {
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let workspace = tmp.path().join("workspace");
+        let codewhale_skills = workspace.join(".codewhale").join("skills");
+        let configured_skills = tmp.path().join("configured-skills");
+        fs::create_dir_all(&codewhale_skills).expect("create codewhale skills dir");
+        fs::create_dir_all(&configured_skills).expect("create configured skills dir");
+
+        let config = Config {
+            skills_dir: Some(configured_skills.to_string_lossy().into_owned()),
+            skills: Some(crate::config::SkillsConfig {
+                scan_codewhale_only: Some(true),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        let resolved = resolve_skills_dir(&config, &workspace);
+
+        assert_eq!(resolved, configured_skills);
     }
 
     #[test]

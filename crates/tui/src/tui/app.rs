@@ -73,8 +73,8 @@ pub(crate) fn resolve_skills_dir(
         if config.skills_dir.is_some() {
             return global_skills_dir.to_path_buf();
         }
-        let codewhale_skills_dir = workspace.join(".codewhale").join("skills");
-        if codewhale_skills_dir.is_dir() {
+        if let Some(codewhale_skills_dir) = crate::skills::codewhale_workspace_skills_dir(workspace)
+        {
             return codewhale_skills_dir;
         }
         return global_skills_dir.to_path_buf();
@@ -5599,6 +5599,16 @@ mod tests {
         }
     }
 
+    #[cfg(unix)]
+    fn create_dir_symlink(target: &std::path::Path, link: &std::path::Path) -> std::io::Result<()> {
+        std::os::unix::fs::symlink(target, link)
+    }
+
+    #[cfg(windows)]
+    fn create_dir_symlink(target: &std::path::Path, link: &std::path::Path) -> std::io::Result<()> {
+        std::os::windows::fs::symlink_dir(target, link)
+    }
+
     #[test]
     fn initial_input_prefill_waits_for_manual_submit() {
         let mut options = test_options(false);
@@ -6682,6 +6692,49 @@ mod tests {
                 .iter()
                 .any(|(name, _)| name == "configured-skill"),
             "explicit configured skills_dir should still be cached: {:?}",
+            app.cached_skills
+        );
+    }
+
+    #[test]
+    fn cached_skills_reject_codewhale_only_workspace_symlink_escape() {
+        let tmp = tempfile::TempDir::new().expect("tempdir");
+        let workspace = tmp.path().join("workspace");
+        let escape_target = tmp.path().join("escape-target");
+        let escaped_skill_dir = escape_target.join("escaped-skill");
+        std::fs::create_dir_all(workspace.join(".codewhale")).expect("codewhale dir");
+        std::fs::create_dir_all(&escaped_skill_dir).expect("escaped skill dir");
+        std::fs::write(
+            escaped_skill_dir.join("SKILL.md"),
+            "---\nname: escaped-skill\ndescription: Escaped skill\n---\nbody\n",
+        )
+        .expect("write escaped skill");
+
+        let link_path = workspace.join(".codewhale").join("skills");
+        if let Err(err) = create_dir_symlink(&escape_target, &link_path) {
+            eprintln!("skipping symlink escape assertion: {err}");
+            return;
+        }
+
+        let global_skills_dir = tmp.path().join("global-skills");
+        let mut options = test_options(false);
+        options.workspace = workspace.clone();
+        options.skills_dir = global_skills_dir.clone();
+        let config = Config {
+            skills: Some(crate::config::SkillsConfig {
+                scan_codewhale_only: Some(true),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        let app = App::new(options, &config);
+
+        assert_eq!(app.skills_dir, global_skills_dir);
+        assert!(
+            !app.cached_skills
+                .iter()
+                .any(|(name, _)| name == "escaped-skill"),
+            "strict app cache must not follow escaped workspace CodeWhale symlinks: {:?}",
             app.cached_skills
         );
     }

@@ -524,7 +524,7 @@ fn skills_directories_with_home_and_mode(
     existing_skill_dirs(candidates)
 }
 
-fn codewhale_workspace_skills_dir(workspace: &Path) -> Option<PathBuf> {
+pub(crate) fn codewhale_workspace_skills_dir(workspace: &Path) -> Option<PathBuf> {
     let skills_dir = workspace.join(".codewhale").join("skills");
     let canonical_workspace = fs::canonicalize(workspace).ok()?;
     let canonical_skills = fs::canonicalize(&skills_dir).ok()?;
