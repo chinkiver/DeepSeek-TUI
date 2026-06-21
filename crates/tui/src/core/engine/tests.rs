@@ -296,6 +296,69 @@ fn ask_rule_engine(command: &str) -> codewhale_execpolicy::ExecPolicyEngine {
 }
 
 #[test]
+fn auto_review_policy_forces_prompt_for_publish_like_actions() {
+    let (decision, audit) = auto_review_plan_decision(
+        "git_push",
+        &json!({"remote": "origin", "branch": "main"}),
+        crate::tui::auto_review::RunOrigin::Interactive,
+        crate::tui::approval::ApprovalMode::Auto,
+        Some("push the release branch"),
+        true,
+        false,
+    );
+
+    assert_eq!(
+        decision,
+        AutoReviewPlanDecision::ForcePrompt(
+            "Auto-review policy requires approval: publish-like actions require a durable review step"
+                .to_string()
+        )
+    );
+    assert_eq!(audit["decision"], "hold_for_review");
+    assert_eq!(audit["action_kind"], "publish");
+}
+
+#[test]
+fn auto_review_policy_blocks_hold_when_approval_is_never() {
+    let (decision, audit) = auto_review_plan_decision(
+        "github_publish_release",
+        &json!({"tag": "v0.8.64"}),
+        crate::tui::auto_review::RunOrigin::Interactive,
+        crate::tui::approval::ApprovalMode::Never,
+        Some("publish release"),
+        true,
+        false,
+    );
+
+    assert_eq!(
+        decision,
+        AutoReviewPlanDecision::Block(
+            "Auto-review policy requires approval: publish-like actions require a durable review step"
+                .to_string()
+        )
+    );
+    assert_eq!(audit["approval_mode"], "NEVER");
+    assert_eq!(audit["decision"], "hold_for_review");
+}
+
+#[test]
+fn auto_review_policy_does_not_change_generic_destructive_auto_approval_yet() {
+    let (decision, audit) = auto_review_plan_decision(
+        "exec_shell",
+        &json!({"command": "cargo test"}),
+        crate::tui::auto_review::RunOrigin::Interactive,
+        crate::tui::approval::ApprovalMode::Auto,
+        Some("run tests"),
+        true,
+        false,
+    );
+
+    assert_eq!(decision, AutoReviewPlanDecision::NoChange);
+    assert_eq!(audit["decision"], "ask_user");
+    assert_eq!(audit["risk"], "destructive");
+}
+
+#[test]
 fn exec_shell_ask_rule_decision_prompts_for_matching_auto_command() {
     let config = EngineConfig {
         exec_policy_engine: ask_rule_engine("cargo test"),

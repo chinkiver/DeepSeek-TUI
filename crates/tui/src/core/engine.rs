@@ -3323,6 +3323,53 @@ pub(super) enum ExecShellAskRuleDecision {
     Block(String),
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) enum AutoReviewPlanDecision {
+    NoChange,
+    ForcePrompt(String),
+    Block(String),
+}
+
+pub(super) fn auto_review_plan_decision(
+    tool_name: &str,
+    tool_input: &Value,
+    run_origin: crate::tui::auto_review::RunOrigin,
+    approval_mode: crate::tui::approval::ApprovalMode,
+    user_intent: Option<&str>,
+    workspace_trusted: bool,
+    dirty_worktree: bool,
+) -> (AutoReviewPlanDecision, Value) {
+    let policy = crate::tui::auto_review::AutoReviewPolicy::default();
+    let context = crate::tui::auto_review::AutoReviewContext::from_tool_call(
+        tool_name,
+        tool_input,
+        run_origin,
+        approval_mode,
+        user_intent,
+        workspace_trusted,
+        dirty_worktree,
+    );
+    let decision = policy.evaluate(&context);
+    let audit_event = policy.audit_event(&context, &decision);
+    let plan_decision = match decision.action {
+        crate::tui::auto_review::AutoReviewAction::Allow
+        | crate::tui::auto_review::AutoReviewAction::AskUser => AutoReviewPlanDecision::NoChange,
+        crate::tui::auto_review::AutoReviewAction::HoldForReview => {
+            let reason = format!("Auto-review policy requires approval: {}", decision.reason);
+            if matches!(approval_mode, crate::tui::approval::ApprovalMode::Never) {
+                AutoReviewPlanDecision::Block(reason)
+            } else {
+                AutoReviewPlanDecision::ForcePrompt(reason)
+            }
+        }
+        crate::tui::auto_review::AutoReviewAction::Block => AutoReviewPlanDecision::Block(format!(
+            "Auto-review policy blocked tool '{tool_name}': {}",
+            decision.reason
+        )),
+    };
+    (plan_decision, audit_event)
+}
+
 pub(super) fn exec_shell_ask_rule_decision(
     config: &EngineConfig,
     tool_name: &str,

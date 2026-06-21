@@ -1605,6 +1605,36 @@ impl Engine {
                     }
                 }
 
+                if blocked_error.is_none() {
+                    let (decision, audit_event) = auto_review_plan_decision(
+                        &tool_name,
+                        &tool_input,
+                        crate::tui::auto_review::RunOrigin::Interactive,
+                        self.session.approval_mode,
+                        None,
+                        crate::config::is_workspace_trusted(&self.session.workspace),
+                        false,
+                    );
+                    emit_tool_audit(json!({
+                        "event": "tool.auto_review_decision",
+                        "tool_id": tool_id.clone(),
+                        "auto_review": audit_event,
+                    }));
+                    match decision {
+                        AutoReviewPlanDecision::NoChange => {}
+                        AutoReviewPlanDecision::ForcePrompt(reason) => {
+                            approval_required = true;
+                            approval_description = reason;
+                            approval_force_prompt = true;
+                        }
+                        AutoReviewPlanDecision::Block(reason) => {
+                            approval_required = false;
+                            approval_force_prompt = false;
+                            blocked_error = Some(ToolError::permission_denied(reason));
+                        }
+                    }
+                }
+
                 let should_emit_hydration_status =
                     !deferred_tools_hydrated_this_batch.contains(&tool_name);
                 if blocked_error.is_none()
