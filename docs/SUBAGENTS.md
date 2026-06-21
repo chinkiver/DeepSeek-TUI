@@ -13,12 +13,13 @@ model-facing launcher is the single `agent` tool and detached work should
 converge on the same lifecycle as Agent Fleet.
 
 The current `agent` implementation delegates to the durable sub-agent runtime
-while that
-cutover completes. It can still be useful for short in-session delegation, but
-if a child fails once on a transient provider timeout while an equivalent fleet
-worker would retry from the ledger, that is a runtime unification gap. For work
-that must survive provider hiccups, process restarts, sleep, or remote
-execution, prefer Fleet or a WhaleFlow-backed fleet run.
+while that cutover completes. It can still be useful for short in-session
+delegation. Transient provider header/stream/time-out failures are retried with
+backoff inside the child runtime before the worker is marked interrupted; if the
+retry budget is exhausted, CodeWhale preserves a checkpoint and returns a
+continuation handle instead of leaving the parent to infer what happened. For
+work that must survive process restarts, sleep, or remote execution, prefer
+Fleet or a WhaleFlow-backed fleet run.
 
 Sub-agents inherit the parent's tool registry by default, but child agents are
 leaf workers: they do not receive `agent` or nested lifecycle tools. `agent`
