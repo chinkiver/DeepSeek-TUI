@@ -3795,18 +3795,22 @@ fn hidden_sidebar_focus_suppresses_sidebar_split_even_when_wide() {
 }
 
 #[test]
-fn sidebar_width_gate_suppresses_visible_focus_when_narrow() {
+fn sidebar_width_gate_uses_sixty_four_column_boundary() {
     let mut app = create_test_app();
     app.sidebar_focus = SidebarFocus::Pinned;
-    app.last_sidebar_host_width = Some(80);
+    app.last_sidebar_host_width = Some(SIDEBAR_VISIBLE_MIN_WIDTH - 1);
 
     assert_eq!(
         sidebar_render_state(&mut app),
         SidebarRenderState::SuppressedByWidth {
-            available_width: 80,
+            available_width: SIDEBAR_VISIBLE_MIN_WIDTH - 1,
             min_width: SIDEBAR_VISIBLE_MIN_WIDTH,
         }
     );
+
+    app.last_sidebar_host_width = Some(SIDEBAR_VISIBLE_MIN_WIDTH);
+
+    assert_eq!(sidebar_render_state(&mut app), SidebarRenderState::Visible);
 }
 
 #[test]
