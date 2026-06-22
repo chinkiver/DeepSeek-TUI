@@ -196,17 +196,15 @@ fn provider_wait_reason(app: &App) -> String {
         }
     }
 
-    // Normal wait — no countdown noise.
-    if idle < PROVIDER_WAIT_IDLE_SHOW_SECS {
-        return "waiting for model".to_string();
-    }
-
-    // Significant idle — surface the elapsed seconds so the user can judge
-    // whether the stream is making progress.
     let near_timeout = budget > 0 && idle >= budget.saturating_mul(3) / 4; // ≥ 75%
     if near_timeout {
         format!("waiting for model · {idle}s/{budget}s idle timeout")
+    } else if idle < PROVIDER_WAIT_IDLE_SHOW_SECS {
+        // Normal wait — no countdown noise.
+        "waiting for model".to_string()
     } else {
+        // Significant idle — surface the elapsed seconds so the user can judge
+        // whether the stream is making progress.
         format!("waiting for model · {idle}s")
     }
 }
@@ -420,6 +418,16 @@ mod tests {
         assert!(reason.contains("waiting for model"));
         assert!(reason.contains("/300s idle timeout"));
         assert!(reason.contains("240s"));
+    }
+
+    #[test]
+    fn provider_wait_reason_short_budget_still_shows_near_timeout() {
+        let mut app = create_test_app();
+        app.stream_chunk_timeout_secs = 30;
+        app.turn_started_at = Some(std::time::Instant::now() - std::time::Duration::from_secs(25));
+        let reason = super::provider_wait_reason(&app);
+        assert!(reason.contains("waiting for model"));
+        assert!(reason.contains("25s/30s idle timeout"), "{reason}");
     }
 
     #[test]
