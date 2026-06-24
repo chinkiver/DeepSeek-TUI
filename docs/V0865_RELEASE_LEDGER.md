@@ -9,9 +9,14 @@ GitHub Releases, and website deploys remain separate maintainer actions.
 
 ## Current Verdict
 
-v0.8.65 is release-ready from the GitHub milestone perspective: the milestone
-has zero open issues, and every non-ledger release PR is either merged,
-auto-closed by a replacement merge, or explicitly moved out of the milestone.
+v0.8.65 is through the PR-churn closeout: every non-ledger release PR is
+merged, auto-closed by a replacement merge, or explicitly closed with evidence.
+
+The milestone itself is not empty. Maintainer direction reinstated four
+reporter/user-facing items into v0.8.65 after the PR queue was cleared:
+#3461, #3205, #2300, and #1519. Those are the remaining release slice, and
+`docs/V0865_REMAINING_AGENT_PROMPT.md` is the focused handoff prompt for the
+next agent.
 
 The release is not publicly shipped from this ledger alone. The latest public
 ship state still has to be verified at release time by Hunter before any tag,
@@ -24,7 +29,7 @@ package publish, GitHub Release, or deploy.
 | #3559 | Merged | Harvested @cy2311's zh-Hans JSON extraction, completed current localization coverage, moved the visible details shortcut to bare `v`, added the AUTHOR_MAP entry required by the harvest gate, and removed the stale internal `AltV` message id. Merge: `a7285ea5a2743d28d0c4bb4154526d0e727ac2fe`. |
 | #3560 | Merged | Finished the remaining harness-profile split by moving built-in harness seeds and private matching helpers into `crates/config/src/harness.rs` while preserving crate-root exports. Merge: `ec29998cce511047f0a237f2be4d95e9c5108a05`. |
 | #3561 | Merged | Harvested shared `integrations/bridge-core` helpers, patched review findings, and verified bridge-core plus Telegram, Feishu, WeCom, and Weixin checks/tests locally. Merge: `ead5165d433a3422625f55e0934443b50faad165`. |
-| #3493 | Open ledger PR | This document. It is the only open v0.8.65 PR after closeout. |
+| #3493 | Open ledger PR | This document plus the remaining-agent prompt. It is the only open v0.8.65 PR after the non-ledger PR closeout. |
 | #3549 | Merged/auto-associated through #3559 | GitHub marked the original contributor PR merged by the replacement merge commit; final evidence comment posted. |
 | #3506 | Closed by #3560 | Final evidence comment posted. |
 | #3432 | Merged/auto-associated through #3561 | GitHub marked the original draft PR merged by the replacement merge commit; final evidence comment posted. |
@@ -74,22 +79,28 @@ Closed as v0.8.65 landed/evidenced:
 
 Open in v0.8.65 as of this update:
 
-None.
+| Issue | Remaining scope |
+| --- | --- |
+| #3461 MCP duplicate server lifecycle/doctor coverage | Current-release MCP lifecycle/doctor work for the concrete Windows duplicate-process report. |
+| #3205 Fleet model classes/loadout auto/semantic route roles | Deterministic role/tag/loadout selection so Fleet auto is real, audited, and provider-scoped. |
+| #2300 multi-model compatibility + automatic Fleet loadout | User-facing acceptance fixture for the automatic selection half of #3205; provider docs/foundations are already covered. |
+| #1519 custom provider endpoints/models/auth | Reporter-raised custom endpoint/model/auth readiness and `/provider`/`/model` custom-row polish. |
 
 Moved out of v0.8.65:
 
 | Issue | New target | Why |
 | --- | --- | --- |
-| #3461 MCP duplicate server lifecycle/doctor coverage | v0.8.67 | Already scoped as v0.8.67 MCP hardening; not a v0.8.65 blocker. |
-| #3205 Fleet model classes/loadout auto/semantic route roles | v0.8.67 | The v0.8.65 substrate landed; automatic model-class loadout selection and semantic route roles remain later Fleet/model-lab work. |
-| #2300 multi-model compatibility + automatic Fleet loadout | v0.8.67 | Provider compatibility docs and route foundations landed; the remaining automatic Fleet loadout selection follows #3205. |
-| #1519 custom provider endpoints/models/auth | v0.8.66 | Provider-scoped routing and custom base URL preservation landed; arbitrary/dynamic custom provider descriptors and `/provider`/`/model` custom rows remain follow-up scope. |
 | #2984 OpenAI Codex/ChatGPT OAuth route verification + usage display | v0.8.66 | Route infrastructure and Responses docs exist; live-account OAuth verification and usage/quota display proof remain unfabricated follow-up evidence. |
 
 ## Required Closeout
 
-1. Merge #3493 after its checks are green.
-2. Hunter may perform the separate release-owner actions: final release
+1. Use `docs/V0865_REMAINING_AGENT_PROMPT.md` to hand the four remaining
+   v0.8.65 issues to the next implementation agent.
+2. Merge #3493 when its docs-only checks are green if the handoff ledger is
+   useful on `main`.
+3. After #3461, #3205, #2300, and #1519 are merged or clearly resolved, update
+   this ledger again with the actual closeout evidence.
+4. Hunter may perform the separate release-owner actions: final release
    verification, version/tag/package/GitHub Release/publish/deploy decisions.
 
 ## Verification Run During Closeout
