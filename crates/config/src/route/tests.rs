@@ -471,18 +471,18 @@ fn default_resolver_yields_real_facts_from_bundled_catalog() {
     assert_eq!(kimi.limits.context_tokens, Some(262_144));
     assert_eq!(kimi.limits.output_tokens, Some(262_144));
 
-    // The asset preserves provider-scoped `cost` on the catalog row (consumed
-    // by `crate::pricing::OfferingPricing`), but this branch's resolver does not
-    // yet carry a per-offering pricing meter onto the candidate (that is the
-    // separate #3085 keystone). Asserting it stays honestly `UnknownOrStale`
-    // here documents that boundary rather than silently fabricating a price.
+    // With the #3085 pricing keystone present on the release branch, the asset's
+    // provider-scoped `cost` now projects onto the candidate via
+    // `route_pricing_sku`, so a priced Z.ai row carries a real per-token meter
+    // rather than `UnknownOrStale` — the "lighting up" that #3385 + #3085 deliver
+    // together.
     let glm51 = r
         .resolve(&req(Some(ProviderKind::Zai), Some("glm-5.1")))
         .expect("Z.ai glm-5.1 should resolve from the bundled catalog");
     assert_eq!(glm51.limits.context_tokens, Some(202_752));
     assert!(matches!(
         glm51.pricing,
-        Some(super::candidate::PricingSku::UnknownOrStale)
+        Some(super::candidate::PricingSku::Token { .. })
     ));
 }
 
