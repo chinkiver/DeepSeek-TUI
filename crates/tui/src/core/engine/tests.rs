@@ -747,6 +747,30 @@ fn file_ask_rule_decision_prompts_for_matching_read_path() {
 }
 
 #[test]
+fn file_ask_rule_decision_prompts_for_absolute_workspace_path() {
+    let config = EngineConfig {
+        exec_policy_engine: file_ask_rule_engine("read_file", "secrets/api_key.txt"),
+        ..EngineConfig::default()
+    };
+
+    let decision = file_tool_ask_rule_decision(
+        &config,
+        "read_file",
+        &json!({"path": "/repo/secrets/api_key.txt"}),
+        Path::new("/repo"),
+        crate::tui::approval::ApprovalMode::Auto,
+    );
+
+    assert_eq!(
+        decision,
+        Some(ToolAskRuleDecision::Prompt(
+            "Typed ask rule 'tool=read_file path=secrets/api_key.txt' requires approval."
+                .to_string()
+        ))
+    );
+}
+
+#[test]
 fn file_ask_rule_decision_blocks_matching_read_path_when_approval_is_never() {
     let config = EngineConfig {
         exec_policy_engine: file_ask_rule_engine("read_file", "secrets/api_key.txt"),
