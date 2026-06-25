@@ -193,10 +193,23 @@ impl AcpServer {
             let provider_name = provider_value
                 .as_str()
                 .ok_or_else(|| AcpError::invalid_params("provider must be a string"))?;
-            let provider = ApiProvider::parse(provider_name).ok_or_else(|| {
-                AcpError::invalid_params(format!("unknown provider: {provider_name}"))
-            })?;
-            self.config.provider = Some(provider.as_str().to_string());
+            // Accept either a built-in provider id/alias or a user-defined
+            // custom provider name that has a `[providers.<name>]` table. For
+            // custom providers, preserve the raw key so routing can still find
+            // the configured base URL / auth / model (#1519); canonicalizing to
+            // "custom" would lose that table key.
+            let is_custom = self
+                .config
+                .providers
+                .as_ref()
+                .and_then(|providers| providers.custom_provider_config(provider_name))
+                .is_some();
+            if !is_custom && ApiProvider::parse(provider_name).is_none() {
+                return Err(AcpError::invalid_params(format!(
+                    "unknown provider: {provider_name}"
+                )));
+            }
+            self.config.provider = Some(provider_name.to_string());
         }
 
         self.model = model;
