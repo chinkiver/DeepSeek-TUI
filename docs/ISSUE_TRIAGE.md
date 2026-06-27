@@ -30,18 +30,21 @@ unless one of the protected labels above is present.
 Run these before changing stale policy or doing a manual cleanup pass:
 
 ```sh
+STALE_CUTOFF=$(python3 -c 'from datetime import date, timedelta; print(date.today() - timedelta(days=45))')
+NEEDS_INFO_CUTOFF=$(python3 -c 'from datetime import date, timedelta; print(date.today() - timedelta(days=30))')
+
 gh issue list --repo Hmbown/CodeWhale --state open \
-  --search 'updated:<2026-05-11' \
+  --search "updated:<${STALE_CUTOFF}" \
   --limit 100 \
   --json number,title,updatedAt,labels,url
 
 gh issue list --repo Hmbown/CodeWhale --state open \
-  --search 'label:needs-info updated:<2026-05-28' \
+  --search "label:needs-info updated:<${NEEDS_INFO_CUTOFF}" \
   --limit 100 \
   --json number,title,updatedAt,labels,url
 
 gh issue list --repo Hmbown/CodeWhale --state open \
-  --search 'created:<2026-05-11 comments:0 -label:keep-open -label:release-blocker -label:security' \
+  --search "created:<${STALE_CUTOFF} comments:0 -label:keep-open -label:release-blocker -label:security" \
   --limit 100 \
   --json number,title,createdAt,updatedAt,labels,url
 ```
